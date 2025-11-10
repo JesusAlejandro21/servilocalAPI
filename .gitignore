@@ -1,0 +1,29 @@
+# Created by venv; see https://docs.python.org/3/library/venv.html
+
+# ======== PYTHON / FLASK ========
+
+# Entornos virtuales
+.venv/
+venv/
+env/
+ENV/
+*.env
+
+# Archivos compilados y caché
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Archivos de configuración locales
+instance/
+*.db
+*.sqlite3
+
+# ======== EDITORES / SISTEMA ========
+
+.vscode/
+.idea/
+*.log
+.DS_Store
+Thumbs.db
