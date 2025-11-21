@@ -22,6 +22,8 @@ app = Flask(__name__,
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/servilocal'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+load_dotenv()
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'clave_predeterminada_segura')
 
 CORS(app, resources={r"/*": {"origins": "*"}})
 db.init_app(app)
