@@ -2,7 +2,7 @@ import os
 from flask import Flask, jsonify, request, json
 from flask_cors import CORS
 from flask_migrate import Migrate
-from models import db, Trabajadores, Usuarios
+from models.models import db, Trabajadores, Usuarios
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 import jwt
@@ -53,9 +53,7 @@ def getTrabajadores():
         }
 
     return jsonify(respuesta), 200
-
-UPLOAD_FOLDER = 'static/uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    
 
 @app.route('/workers/information/<int:id_trabajador>', methods=['GET'])
 def get_datos(id_trabajador):
