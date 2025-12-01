@@ -25,9 +25,128 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 load_dotenv()
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'clave_predeterminada_segura')
 
+sdk = mercadopago.SDK("TEST-3761858260575889-112610-d264e25c8a0e52f3e8aa5a83551c2a48-618206464")
+
 CORS(app, resources={r"/*": {"origins": "*"}})
 db.init_app(app)
 migrate = Migrate(app, db)
+
+@app.route("/preferencemp", methods=['GET'])
+def crear_preferencia():
+
+    preference_data = {
+        "items": [
+            {
+                "title": "Nombre de producto",
+                "quantity": 1,
+                "unit_price": 100.00
+            }
+        ],
+        "back_urls": {
+            "success": "https://carpiteriareyna.com/success",
+            "failure": "https://carpiteriareyna.com/failure",
+            "pending": "https://carpiteriareyna.com/pending"
+        },
+       # "auto_return": "approved",
+    }
+
+    #crear preferencia
+    preference_response = sdk.preference().create(preference_data)
+    preference = preference_response["response"]
+    
+    data = {
+        "id": preference["id"],
+        "init_point": preference["init_point"],
+        "sandbox_init_point": preference["sandbox_init_point"]
+    }
+
+    respuesta = {
+        "mensaje" : "Mensaje de exito",
+        "status" : "success",
+        "data" : data
+    }
+
+    return jsonify(respuesta),200
+
+@app.route('/processpayment', methods=['POST'])
+def process_payment():
+    """
+    Procesa un pago utilizando la API de Mercado Pago.
+    """
+    parameters = request.get_json(silent=True)
+
+    if not parameters:
+        return jsonify({"error": "Datos JSON inválidos o faltantes"}), 400
+
+    payment_data_form = parameters.get('formdata')
+    # id_carrito = parameters.get('idfoliocarrito') # Variable no utilizada
+    id_device = parameters.get('iddevice')
+
+    if not payment_data_form or not payment_data_form.get('token'):
+        return jsonify({"error": "Faltan datos obligatorios (token o formdata)"}), 400
+
+    # PROCESAR LA COMPRA Y REGISTRAR O MODIFICAR LA BASE DE DATO
+    # DE ACUERDO A LA LOGICA DE NEGOCIO
+
+    amount = payment_data_form.get('transaction_amount')
+    email = payment_data_form.get('payer').get('email')
+
+    payment_intent_data = {
+        "transaction_amount": float(amount),
+        "token": payment_data_form.get('token'),
+        "payment_method_id": payment_data_form.get('payment_method_id'),
+        "issuer_id": payment_data_form.get('issuer_id'),
+        "description": "Descripcion del pago a Realizar",
+        "installments": 1,  # pago en una sola exhibición
+        "statement_descriptor": 'Description',
+        "payer": {
+            "first_name": 'Jonathan',
+            "last_name": "Guevara",
+            "email": email,
+        },
+        "additional_info": {
+            "items": [
+                {
+                    "title": "Nombre del Producto",
+                    "quantity": 1,
+                    "unit_price": float(amount)
+                }
+            ]
+        },
+        "capture": True,
+        "binary_mode": False,  # evita pagos pendientes: solo aprueba o rechaza
+        # "device_id": id_device
+    }
+
+    request_options = RequestOptions()
+
+    idempotency_key = str(uuid.uuid4())
+
+    request_options.custom_headers = {
+        "X-Idempotency-Key": idempotency_key,
+        "X-meli-session-id": id_device
+    }
+
+    result = sdk.payment().create(payment_intent_data, request_options)
+    payment_response = result.get("response", {})
+
+    if (payment_response.get("status") == 'approved' and
+            payment_response.get('status_detail') == 'accredited'):
+        # PROCESAR SUS DATOS EN LA BD O LO QUE TENGAN QUE HACER
+        # DAR RESPUESTA
+        respuesta = {
+            "mensaje": "Mensaje de Exito",
+            "status": "success",
+            'data': payment_response
+        }
+        return jsonify(respuesta), 200
+    else:
+        respuesta = {
+            "mensaje": "Mensaje de Error",
+            "status": "error",
+            'data': payment_response
+        }
+        return jsonify(respuesta), 400
 
 @app.route("/main/token", methods=['GET'])
 def getToken():
