@@ -20,7 +20,9 @@ app = Flask(__name__,
             static_url_path='/static')
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/servilocal'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:UdlMFndRgqAmfwYFIZfMnbieiXwNEkDG@switchback.proxy.rlwy.net:37016/servilocal'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/servilocal'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 load_dotenv()
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'clave_predeterminada_segura')
